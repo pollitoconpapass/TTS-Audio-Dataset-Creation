@@ -13,7 +13,7 @@ All of this is based on the mms-1b-all Facebook Speech-to-Text model: https://hu
 2. Separately install the urllib package
 
         pip install 'urllib3<2'
-3. Create a Hugging Face token and paste it in the console after running 
+3. Create a Hugging Face token and paste it inside the console after running the commands:
 
         git config --global credential.helper store
         huggingface-cli login

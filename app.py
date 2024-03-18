@@ -164,9 +164,7 @@ def transcribe_definitivo(inputs_path, dataset_name):
 
         dataset.push_to_hub(dataset_name, token=gr.OAuthToken)
 
-        local_filename = f"{dataset_name}.parquet"
-        dataset.to_parquet(local_filename)
-        print(f"Dataset saved as: {local_filename}")
+        print(f"Dataset generated successfully: {dataset_name}")
 
     return [[transcript] for transcript in transcripts], text
 
