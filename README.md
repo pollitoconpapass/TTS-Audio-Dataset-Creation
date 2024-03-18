@@ -13,9 +13,10 @@ All of this is based on the mms-1b-all Facebook Speech-to-Text model: https://hu
 2. Separately install the urllib package
 
         pip install 'urllib3<2'
-3. Create a Hugging Face token and place it inside the HG_TOKEN part (ln. 17)
+3. Create a Hugging Face token and paste it inside the console after running the commands:
 
-        HG_TOKEN = "<KEY>"
+        git config --global credential.helper store
+        huggingface-cli login
 4. Inside the `stt_general` function you can change the language code for the one you like (ln. 75-76)
 
         processor.tokenizer.set_target_lang("quz") # -> cuzco quechua code

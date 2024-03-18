@@ -4,6 +4,7 @@ import tempfile
 import torchaudio
 import demucs.api
 import numpy as np
+import gradio as gr
 from scipy.io import wavfile
 from pydub import AudioSegment
 from datasets import Dataset, Audio
@@ -14,7 +15,6 @@ DEMUCS_MODEL_NAME = "htdemucs_ft"
 BATCH_SIZE = 8
 FILE_LIMIT_MB = 10000
 YT_LENGTH_LIMIT_S = 36000
-HG_TOKEN = "<KEY>"
 
 separator = demucs.api.Separator(model = DEMUCS_MODEL_NAME)
 
@@ -162,17 +162,15 @@ def transcribe_definitivo(inputs_path, dataset_name):
 
         dataset = Dataset.from_dict({"audio": audios, "text": transcripts}).cast_column("audio", Audio())
 
-        dataset.push_to_hub(dataset_name, HG_TOKEN)
+        dataset.push_to_hub(dataset_name, token=gr.OAuthToken)
 
-        local_filename = f"{dataset_name}.parquet"
-        dataset.to_parquet(local_filename)
-        print(f"Dataset saved as: {local_filename}")
+        print(f"Dataset generated successfully: {dataset_name}")
 
     return [[transcript] for transcript in transcripts], text
 
 
 # === MAIN ===
-audio_file = "prueba.wav"
-dataset_name = "dataset_quz_QC2X"
+audio_file = "colon-cancer-quechua.wav"
+dataset_name = "dataset_quz_TTS_ex"
 
 transcribe_definitivo(audio_file, dataset_name)
