@@ -25,7 +25,7 @@ def separate_vocal(path):
     return path
 
 
-def naive_postprocess_chunks(chunks, audio_array, sampling_rate,  stop_chars = ".!:;?", min_duration = 5):
+def naive_postprocess_chunks(chunks, audio_array, sampling_rate,  stop_chars = ".,!:;?", min_duration = 5):
     # merge chunks as long as merged audio duration is lower than min_duration and that a stop character is not met
     # return list of dictionnaries (text, audio)
     # min duration is in seconds
