@@ -4,6 +4,7 @@ import tempfile
 import torchaudio
 import demucs.api
 import numpy as np
+import gradio as gr
 from scipy.io import wavfile
 from pydub import AudioSegment
 from datasets import Dataset, Audio
@@ -14,7 +15,6 @@ DEMUCS_MODEL_NAME = "htdemucs_ft"
 BATCH_SIZE = 8
 FILE_LIMIT_MB = 10000
 YT_LENGTH_LIMIT_S = 36000
-HG_TOKEN = "<KEY>"
 
 separator = demucs.api.Separator(model = DEMUCS_MODEL_NAME)
 
@@ -25,7 +25,7 @@ def separate_vocal(path):
     return path
 
 
-def naive_postprocess_chunks(chunks, audio_array, sampling_rate,  stop_chars = ".!:;?", min_duration = 5):
+def naive_postprocess_chunks(chunks, audio_array, sampling_rate,  stop_chars = ".,!:;?", min_duration = 5):
     # merge chunks as long as merged audio duration is lower than min_duration and that a stop character is not met
     # return list of dictionnaries (text, audio)
     # min duration is in seconds
@@ -112,7 +112,7 @@ def split_audio_chunks(audio_file, chunk_duration=30):
         os.remove(file)
 
         # === RESULTS ===
-        whole_transcription += transcription_result["transcription"] + " "
+        whole_transcription += transcription_result["transcription"] + ", "
         chunks.append({"timestamp": (start_time, end_time),
                        "text": transcription_result["transcription"]})
 
@@ -162,7 +162,7 @@ def transcribe_definitivo(inputs_path, dataset_name):
 
         dataset = Dataset.from_dict({"audio": audios, "text": transcripts}).cast_column("audio", Audio())
 
-        dataset.push_to_hub(dataset_name, HG_TOKEN)
+        dataset.push_to_hub(dataset_name, token=gr.OAuthToken)
 
         local_filename = f"{dataset_name}.parquet"
         dataset.to_parquet(local_filename)
@@ -172,7 +172,7 @@ def transcribe_definitivo(inputs_path, dataset_name):
 
 
 # === MAIN ===
-audio_file = "prueba.wav"
-dataset_name = "dataset_quz_QC2X"
+audio_file = "colon-cancer-quechua.wav"
+dataset_name = "dataset_quz_TTS_ex"
 
 transcribe_definitivo(audio_file, dataset_name)
