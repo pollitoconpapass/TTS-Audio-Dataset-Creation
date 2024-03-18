@@ -112,7 +112,7 @@ def split_audio_chunks(audio_file, chunk_duration=30):
         os.remove(file)
 
         # === RESULTS ===
-        whole_transcription += transcription_result["transcription"] + " "
+        whole_transcription += transcription_result["transcription"] + ", "
         chunks.append({"timestamp": (start_time, end_time),
                        "text": transcription_result["transcription"]})
 
