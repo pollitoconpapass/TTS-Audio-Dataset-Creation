@@ -5,18 +5,16 @@ import torchaudio
 import demucs.api
 import numpy as np
 import gradio as gr
+import soundfile as sf
 from scipy.io import wavfile
-from pydub import AudioSegment
 from datasets import Dataset, Audio
 from transformers import Wav2Vec2ForCTC, AutoProcessor
 
 
 DEMUCS_MODEL_NAME = "htdemucs_ft"
 BATCH_SIZE = 8
-FILE_LIMIT_MB = 10000
-YT_LENGTH_LIMIT_S = 36000
 
-separator = demucs.api.Separator(model = DEMUCS_MODEL_NAME)
+separator = demucs.api.Separator(model=DEMUCS_MODEL_NAME)
 
 
 def separate_vocal(path):
@@ -25,7 +23,7 @@ def separate_vocal(path):
     return path
 
 
-def naive_postprocess_chunks(chunks, audio_array, sampling_rate,  stop_chars = ".,!:;?", min_duration = 5):
+def naive_postprocess_chunks(chunks, audio_array, sampling_rate,  stop_chars = ".,!:;?", min_duration = 3):
     # merge chunks as long as merged audio duration is lower than min_duration and that a stop character is not met
     # return list of dictionnaries (text, audio)
     # min duration is in seconds
@@ -80,7 +78,7 @@ def stt_general(wav_file_path):
             outputs = model(**inputs).logits
 
         ids = torch.argmax(outputs, dim=-1)[0]
-        transcription = processor.decode(ids)
+        transcription = processor.decode(ids) + "."
 
         return {"transcription": transcription}
 
@@ -89,11 +87,8 @@ def stt_general(wav_file_path):
     
 
 def split_audio_chunks(audio_file, chunk_duration=30):
-    audio = AudioSegment.from_file(audio_file)
-    chunk_length_ms = chunk_duration * 1000  # -> to miliseconds
-
-    num_chunks = len(audio) // chunk_length_ms  # -> total chunks from the whole audio when cut every 30 s
-    total_duration_seconds = len(audio) / 1000  # -> len(audio) will be in ms
+    audio, sampling_rate = sf.read(audio_file)
+    num_chunks = len(audio) // (chunk_duration * sampling_rate)  # -> total chunks from the whole audio when cut every 30 s
 
     whole_transcription = ""
     chunks = []
@@ -101,18 +96,19 @@ def split_audio_chunks(audio_file, chunk_duration=30):
     for i in range(num_chunks):
         # === TIMESTAMPS ===
         start_time = i * chunk_duration  # -> for going to 0-30, 30-60, etc
-        end_time = min((i + 1) * chunk_duration, total_duration_seconds)
-        chunk = audio[start_time * 1000: end_time * 1000]
+        end_time = min((i + 1) * chunk_duration, len(audio) / sampling_rate) 
+        chunk = audio[int(start_time * sampling_rate): int(end_time * sampling_rate)]
 
         # === TRANSCRIPTIONS ===
         file = f"tmp/chunk_{i}.wav"
-        chunk.export(file, format="wav")
+        sf.write(file, chunk, sampling_rate)
 
         transcription_result = stt_general(file)
+        print(f"Transcription: {transcription_result}\n")
         os.remove(file)
 
         # === RESULTS ===
-        whole_transcription += transcription_result["transcription"] + ", "
+        whole_transcription += transcription_result["transcription"]
         chunks.append({"timestamp": (start_time, end_time),
                        "text": transcription_result["transcription"]})
 
@@ -170,7 +166,7 @@ def transcribe_definitivo(inputs_path, dataset_name):
 
 
 # === MAIN ===
-audio_file = "colon-cancer-quechua.wav"
-dataset_name = "dataset_quz_TTS_ex"
+audio_file = "AMLQ-Data.wav"
+dataset_name = "dataset_quz_test_1"
 
 transcribe_definitivo(audio_file, dataset_name)
